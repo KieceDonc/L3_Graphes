@@ -1,16 +1,22 @@
-﻿#include <cstdlib>
+﻿/*
+
+    CE CODE N'EST PAS ENTIÈREMENT LE MIEN
+
+*/
+
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <math.h>
 using namespace std;
 
-const int n=40;               // Le nombre de points.
-const int dmax=100;		// La distance jusqu'a laquelle on relie deux points.
-vector<int> voisin[n];          // Les listes de voisins.                    
-int point[n][2];                // Les coordonnees des points.
-int arbre[n-1][2];              // Les aretes de l'arbre de Dijkstra .
-int pere[n];    		// La relation de filiation de l'arbre de Dijkstra.
+const int n=40;         // Le nombre de points.
+const int dmax=200;		// La distance jusqu'a laquelle on relie deux points.
+vector<int> voisin[n];  // Les listes de voisins.                    
+int point[n][2];        // Les coordonnees des points.
+int arbre[n-1][2];      // Les aretes de l'arbre de Dijkstra .
+int pere[n];    		// La relation de filiation de l'arbre de Dijkstra. Également prédécesseur dans l'arbre des plus courts
 
 void afficheGraphe(int n,int d, int sommet[][2]){
     // Cree le fichier Graphe.ps qui affiche le graphe.
@@ -94,7 +100,7 @@ void voisins(){
     }
 }
 
-void printVoisins(){
+void afficheVoisins(){
     for(int x = 0; x< n ;x++){
         cout << "voisin de " << x << " : ";
         if(voisin[x].size() == 0){
@@ -110,7 +116,6 @@ void printVoisins(){
 int nb_m=0; // nombre de sommet marqué
 int l[n]; // Distance de la source 
 int m[n]; // Sommet marqué, si 0 pas marqué, si 1 marqué
-int p[n]; // Prédécesseur dans l'arbre des plus courts
 
 void Dijkstra_init(int s){
     // L'idée ici est d'initialiser la distance de la façon suivante
@@ -123,10 +128,11 @@ void Dijkstra_init(int s){
             int euclide_distance = sqrt(pow((point[s][0]-point[x][0]),2)+pow((point[s][1]-point[x][1]),2));
             if(euclide_distance<=dmax){
                 l[x]=euclide_distance;
+                pere[x]=s;
             }else{
                 l[x]=dmax*n*10;
+                pere[x]=-1;
             }
-            p[x]=-1;
         }
     }
 }
@@ -154,7 +160,7 @@ int Dijkstra_choisir_sommet(int s){
 
 void Dijkstra(int s){
     // s = source
-    p[s]=-1; // le père de la source n'existe pas
+    pere[s]=-2; // le père de la source n'existe pas
     Dijkstra_init(s);
     l[s]=0; // la distance de la source à source est de 0
     m[s]=1; // on marque la source comme sommet traité
@@ -166,7 +172,7 @@ void Dijkstra(int s){
             if(y!=sommet && m[y]==0){
                 int euclide_distance = sqrt(pow((point[sommet][0]-point[y][0]),2)+pow((point[sommet][1]-point[y][1]),2));
                 if(euclide_distance<=dmax && l[y] > l[sommet] + euclide_distance){
-                    p[y] = sommet;
+                    pere[y] = sommet;
                     l[y] = l[sommet] + euclide_distance;
                 }
             }
@@ -174,21 +180,32 @@ void Dijkstra(int s){
     }
 }
 
-void printResultatDijkstra(){
+void afficheResultatDijkstra(){
     for(int x = 0; x < n; x++){
         cout << "Distance du sommet " << x << " depuis la source : " << l[x] << endl;
     }
 }
 
+
+int construitArbre(){
+    int index = 0;
+    for(int x = 0; x < n ;x++){
+        if(pere[x]>=0){
+            arbre[index][0]=x;
+            arbre[index][1]=pere[x];
+            index++;
+        }
+    }
+    return index;
+}
+
 int main(){
     generegraphe(n,point);
     afficheGraphe(n,dmax,point);
-    /*
-    voisins();
-    printVoisins();
-    */
-    int source = 5;
+    int source = 36;
     Dijkstra(source);
-    printResultatDijkstra();
+    afficheResultatDijkstra();
+    int nbAretes = construitArbre();
+    afficheArbre(n,nbAretes,point,arbre);
     return 0;
 }
