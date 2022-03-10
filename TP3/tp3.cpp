@@ -6,7 +6,7 @@
 
 using namespace std;
 
-const int n=20; // nombre de sommets
+const int n=25; // nombre de sommets
 int adj[n][n];  // matrice d'adjacence du graphe
 int couleur1[n];  // couleurs des sommets pour l'agorithme exact
 int couleur2[n];
@@ -54,7 +54,7 @@ void colorExact(int k)
     for(int i=0;i<n;i++)
      couleur1[i]=0;
      colorRR(0,k);
-     if(!trouve) cout << "Pas de coloration en " << k <<" couleurs" << endl;
+     //if(!trouve) cout << "Pas de coloration en " << k <<" couleurs" << endl;
 }
 
 void genereGraphe(int p){
@@ -117,9 +117,85 @@ int colorGlouton(){
      return max;
 }
 
+int DSATUR_choisir_sommet(int DSAT[], bool couleur3_estColorier[]){
+     int sommet = 0; 
+
+     int DSATMax = -1;
+     bool conflit = false;
+     for(int x = 0; x < n; x++){
+          if(!couleur3_estColorier[x]){
+               if(DSAT[x]>DSATMax){
+                    DSATMax = DSAT[x];
+                    sommet = x;
+                    conflit = false;
+               }else if(DSAT[x] == DSATMax){
+                    conflit = true;
+               }
+          }
+     }
+
+     if(conflit){
+          int degreMax = -1;
+          for(int x = 0; x < n; x++){
+               if(!couleur3_estColorier[x] && DSAT[x] == DSATMax){
+                    int currentDegre = 0;
+                    for(int y = 0; y < n; y++){
+                         if(x!=y && adj[x][y]==1){
+                              currentDegre+=1;
+                         }
+                    }
+                    if(currentDegre > degreMax){
+                         degreMax = currentDegre;
+                         sommet = x;
+                    }
+               }
+          }
+     }
+
+     return sommet;
+}
+
 int DSATUR(){
-     
-     return;
+     int couleurMax = -1;
+          
+     int DSAT[n];
+     bool couleur3_estColorier[n];
+
+     for(int x = 0; x < n; x++){
+          couleur3_estColorier[x] = false;
+     }    
+
+     int sommet = 0;
+     int cmpt_sommet_colorier = 0;
+     while(cmpt_sommet_colorier < n){
+          sommet = DSATUR_choisir_sommet(DSAT,couleur3_estColorier);
+          
+          bool couleurEstUtiliser[n];
+          for(int x = 0; x < n; x++){
+               couleurEstUtiliser[x] = false;
+          }
+
+          for(int y = 0; y < n; y++){
+               if(adj[sommet][y]==1 && couleur3_estColorier[y]){
+                    couleurEstUtiliser[couleur3[y]]=true;
+                    DSAT[y]+=1;
+               }
+          }     
+
+          int couleur = 0;
+          while(couleurEstUtiliser[couleur]){
+               couleur+=1;
+          }
+
+          couleur3[sommet] = couleur;
+          if(couleur > couleurMax){
+               couleurMax = couleur;
+          }
+          couleur3_estColorier[sommet] = true;
+          cmpt_sommet_colorier+=1;
+     };
+
+     return couleurMax;
 }
 
 int main(){
@@ -129,5 +205,7 @@ int main(){
      cout << "Nombre chromatique : " << nbChro << endl;
      int glouton = colorGlouton();
      cout << "Nombre chromatique : " << glouton << endl;
+     int dsatur = DSATUR();
+     cout << "Nombre chromatique : " << dsatur << endl;
      return 0;
 }
